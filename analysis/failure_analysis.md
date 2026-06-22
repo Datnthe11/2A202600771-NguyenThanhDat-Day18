@@ -1,51 +1,45 @@
-# Failure Analysis — Lab 18: Production RAG
+# Failure Analysis — Lab 18
 
-**Nhóm:** [Tên nhóm]  
-**Thành viên:** [Tên 1 → M1] · [Tên 2 → M2] · [Tên 3 → M3] · [Tên 4 → M4]
-
----
+**Nhóm:** Cá nhân
+**Thành viên:** Nguyễn Thành Đạt
 
 ## RAGAS Scores
 
-| Metric | Naive Baseline | Production | Δ |
-|--------|---------------|------------|---|
-| Faithfulness | | | |
-| Answer Relevancy | | | |
-| Context Precision | | | |
-| Context Recall | | | |
+| Metric | Production Score |
+|--------|------------------|
+| Faithfulness | 0.7667 |
+| Answer Relevancy | 0.7203 |
+| Context Precision | 0.9500 |
+| Context Recall | 0.8833 |
 
 ## Bottom-5 Failures
 
 ### #1
-- **Question:**
-- **Expected:**
-- **Got:**
-- **Worst metric:**
-- **Error Tree:** Output sai → Context đúng? → Query OK? →
-- **Root cause:**
-- **Suggested fix:**
+- **Question:** Bao lâu phải đổi mật khẩu một lần?
+- **Worst metric:** faithfulness (0.00)
+- **Error Tree:** Output sai (bịa thêm thông tin) → Context đúng nhưng nhiễu → Root cause: LLM tự hallucinate do prompt chưa đủ chặt chẽ, hoặc sinh ra câu trả lời nằm ngoài context.
+- **Suggested fix:** Tighten prompt, giảm nhiệt độ (temperature=0.0) để LLM bám sát nội dung văn bản.
 
 ### #2
-(copy template)
+- **Question:** Một nhân viên Senior có 9 năm thâm niên được nghỉ bao nhiêu ngày phép năm và lương trong khoảng nào?
+- **Worst metric:** answer_relevancy (0.00)
+- **Error Tree:** Output không khớp câu hỏi → Context có thể chứa thông tin rời rạc → Root cause: Câu hỏi phức hợp (hỏi cả phép năm và lương), LLM Generator không tổng hợp đủ ý để trả lời trọn vẹn cả hai vế.
+- **Suggested fix:** Cải thiện Prompt Template để hướng dẫn LLM phân rã câu hỏi nhiều vế và trả lời từng ý một.
 
 ### #3
-(copy template)
+- **Question:** Nhân viên tạm ứng 15 triệu, sau 20 ngày mới thanh toán. Bị phạt bao nhiêu?
+- **Worst metric:** faithfulness (0.00)
+- **Error Tree:** Output sai → Context có chứa thông tin thanh toán tạm ứng nhưng LLM tự suy diễn mức phạt → Root cause: LLM bị hallucination khi gặp tình huống tính toán ngày tháng/tiền phạt mà trong context không ghi rõ mức phạt cụ thể.
+- **Suggested fix:** Thêm chỉ thị bắt buộc vào Prompt: "Nếu văn bản không có thông tin về tiền phạt, tuyệt đối không tự tính toán hay bịa ra con số".
 
 ### #4
-(copy template)
+- **Question:** Lương thử việc của nhân viên Junior mức cao nhất là bao nhiêu?
+- **Worst metric:** faithfulness (0.00)
+- **Error Tree:** Output sai số liệu → Root cause: LLM tự hallucinate hoặc nhầm lẫn giữa bảng lương Junior và Senior.
+- **Suggested fix:** Sử dụng Structure-Aware Chunking tốt hơn cho bảng lương, đồng thời dùng Reranker mạnh hơn.
 
 ### #5
-(copy template)
-
-## Case Study (cho presentation)
-
-**Question chọn phân tích:**
-
-**Error Tree walkthrough:**
-1. Output đúng? →
-2. Context đúng? →
-3. Query rewrite OK? →
-4. Fix ở bước:
-
-**Nếu có thêm 1 giờ, sẽ optimize:**
--
+- **Question:** Nếu cần mua một chiếc laptop 30 triệu cho nhân viên mới, ai phê duyệt và cần gì từ phòng CNTT?
+- **Worst metric:** faithfulness (0.50)
+- **Error Tree:** Output sai một phần (trả lời được 1 vế) → Context thiếu thông tin phê duyệt → Root cause: Quy trình duyệt mua sắm nằm ở 2 đoạn văn khác nhau (trang trước và trang sau) nên chunking làm đứt mạch văn bản.
+- **Suggested fix:** Áp dụng Hierarchical Chunking (gọi child chunk, trả về parent chunk) để LLM có trọn vẹn quy trình mua sắm.

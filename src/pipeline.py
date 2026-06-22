@@ -4,6 +4,20 @@ from __future__ import annotations
 
 import os, sys, time
 
+import io
+if sys.stdout.encoding.lower() != 'utf-8':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+if sys.stderr.encoding.lower() != 'utf-8':
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
+import ssl
+_orig_create_default_context = ssl.create_default_context
+def patched_create_default_context(purpose=ssl.Purpose.SERVER_AUTH, *, cafile=None, capath=None, cadata=None):
+    return ssl._create_unverified_context(purpose=purpose, cafile=cafile, capath=capath, cadata=cadata)
+ssl.create_default_context = patched_create_default_context
+ssl._create_default_https_context = ssl._create_unverified_context
+import datasets.utils.logging
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.m1_chunking import load_documents, chunk_hierarchical

@@ -6,6 +6,8 @@ Basic = paragraph chunking + dense-only search (không hybrid, không rerank, kh
 """
 
 import sys, os, time
+import ssl
+ssl.create_default_context = ssl._create_unverified_context
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
